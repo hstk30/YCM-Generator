@@ -13,6 +13,8 @@ import time
 import subprocess
 import glob
 
+import six
+
 
 # Default flags for make
 default_make_flags = ["-i", "-j" + str(multiprocessing.cpu_count())]
@@ -400,7 +402,7 @@ def parse_flags(build_log):
     # Only specify one word size (the largest)
     # (Different sizes are used for different files in the linux kernel.)
     mRegex = re.compile("^-m[0-9]+$")
-    word_flags = list([f for f in flags if isinstance(f, str) and mRegex.match(f)])
+    word_flags = list([f for f in flags if isinstance(f, six.string_types) and mRegex.match(f)])
 
     if(len(word_flags) > 1):
         for flag in word_flags:
@@ -409,7 +411,7 @@ def parse_flags(build_log):
         flags.add(max(word_flags))
 
     # Resolve duplicate macro definitions (always choose the last value for consistency)
-    for name, values in define_flags.items():
+    for name, values in six.iteritems(define_flags):
         if(len(values) > 1):
             print("WARNING: {} distinct definitions of macro {} found".format(len(values), name))
             values.sort()
@@ -427,7 +429,7 @@ def generate_cc_conf(flags, config_file):
 
     with open(config_file, "w") as output:
         for flag in flags:
-            if(isinstance(flag, str)):
+            if(isinstance(flag, six.string_types)):
                 output.write(flag + "\n")
             else: # is tuple
                 for f in flag:
@@ -450,7 +452,7 @@ def generate_ycm_conf(flags, config_file):
                 if(line == "    # INSERT FLAGS HERE\n"):
                     # insert generated code
                     for flag in flags:
-                        if(isinstance(flag, str)):
+                        if(isinstance(flag, six.string_types)):
                             output.write("    '{}',\n".format(flag))
                         else: # is tuple
                             output.write("    '{}', '{}',\n".format(*flag))
